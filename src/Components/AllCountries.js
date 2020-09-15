@@ -1,62 +1,73 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import Grid from '@material-ui/core/Grid';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 const useStyles = makeStyles((theme) => ({
     root: {
-        maxWidth: 1000,
-        margin: '0 auto',
-        marginTop: 50
+      margin:  'auto',
+      
     },
-    paper: {
-        padding: theme.spacing(2),
-        textAlign: 'Center',
-        color: theme.palette.text.secondary,
-    },
-
-    tittle: {
-        color: '#3f51b5',
-        textTransform: 'uppercase'
+    table:{
+        minWidth:650
     }
-}));
+  }));
 
-export default function AllCountries() {
 
-    const [globalData, setglobalData] = useState([{}]);
-
-    useEffect(() => {
-
-        async function getData() {
-
-            const response = await fetch("https://api.thevirustracker.com/free-api?countryTotals=ALL'")
-            let data = await response.json();
-
-            setglobalData(Object.values(data.countryitems[0]));
-            console.log(data.countryitems[0["1"]]);
-        }
-        getData();
-    }, [])
-
+export default function Countries() {
     const classes = useStyles();
-
+    const [globaldata, setGlobaldata] = useState([{}])
+    const [loading,setLoading]=useState(true)
+    useEffect(() => {
+        async function fetchapi() {
+            const api = await fetch('https://disease.sh/v3/covid-19/countries')
+            const data = await api.json()
+            console.log(data)
+            setGlobaldata(data)
+            setLoading()
+        }
+        fetchapi()
+    }, [globaldata])
     return (
-        <div className={classes.root}>
-            <Grid container spacing={3}>
-                {Object.keys(globalData[0]).map((key, ind) => {
-                    return (
-                        <Grid item xs={12} sm={4} key={ind}>
-                            <Paper className={classes.paper}
-                                elevation={3}>
-                                <h3 className={classes.tittle}>
-                                    {key.replace(/_/g, ' ')}</h3>
-                                <h3> {globalData[0][key]}</h3>
-                            </Paper>
-                        </Grid>
-
-                    )
-                })}
-            </Grid>
-        </div>
+        <TableContainer component={Paper}>
+            {loading ? 
+            <div className={classes.root}>
+                <CircularProgress color="secondary" />
+            </div> : 
+            <Table className={classes.table} size="small" aria-label="a dense table">
+                <TableHead className={classes.header}>
+                    <TableRow>
+                        <TableCell component="th" scope="row">Country</TableCell>
+                        <TableCell component="th" scope="row">Active</TableCell>
+                        <TableCell component="th" scope="row">Deaths</TableCell>
+                        <TableCell component="th" scope="row">Recovered</TableCell>
+                        <TableCell component="th" scope="row">Case today</TableCell>
+                        <TableCell component="th" scope="row">Death today</TableCell>
+                        <TableCell component="th" scope="row">Recovered today</TableCell>   
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                
+                    {globaldata.map((key, ind) => (
+                        <TableRow key={ind}>
+                            <TableCell><img width="25" src={key.countryInfo.flag} alt="flag"/> {key.country}</TableCell>
+                            <TableCell>{key.active}</TableCell>
+                            <TableCell>{key.deaths}</TableCell>
+                            <TableCell>{key.recovered}</TableCell>
+                            <TableCell>{key.todayCases}</TableCell>
+                            <TableCell>{key.todayDeaths}</TableCell>
+                            <TableCell>{key.todayRecovered}</TableCell>
+                        </TableRow>
+                    ))}
+                    
+                </TableBody>
+            </Table>}
+        </TableContainer>
     );
 }
